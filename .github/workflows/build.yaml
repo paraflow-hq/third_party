@@ -9,16 +9,12 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - arch: x86_64
-            runner: ubuntu-latest
-            target_cpu: "x64"
-          - arch: arm64
-            runner: ubuntu-latest-arm64
-            target_cpu: "arm64"
+        platform:
+          - linux/amd64
+          - linux/arm64
 
     steps:
       - name: Checkout repository
@@ -87,6 +83,9 @@ jobs:
           echo "Architecture: ${{ matrix.arch }}"
           echo "Artifact ID: ${{ steps.upload-artifacts.outputs.artifact-id }}"
           echo "Artifact URL: ${{ steps.upload-artifacts.outputs.artifact-url }}"
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
 
   collect:
     runs-on: ubuntu-latest
