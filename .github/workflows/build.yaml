@@ -81,8 +81,9 @@ jobs:
           path: |
             out/Release/libEGL.so*
             out/Release/libGLESv2.so*
-            out/Release/libvulkan.so*
             out/Release/libvk_swiftshader.so*
+            out/Release/libvulkan.so*
+            out/Release/vk_swiftshader_icd.json
           retention-days: 30
           compression-level: 6
 
@@ -102,8 +103,9 @@ jobs:
           mkdir -p release-files
           cp out/Release/libEGL.so* release-files/ 2>/dev/null || true
           cp out/Release/libGLESv2.so* release-files/ 2>/dev/null || true
-          cp out/Release/libvulkan.so* release-files/ 2>/dev/null || true
           cp out/Release/libvk_swiftshader.so* release-files/ 2>/dev/null || true
+          cp out/Release/libvulkan.so* release-files/ 2>/dev/null || true
+          cp out/Release/vk_swiftshader_icd.json release-files/ 2>/dev/null || true
           cd release-files
           zip -r ../libangle-${{ matrix.arch }}-${COMMIT_HASH}.zip .
           cd ..
