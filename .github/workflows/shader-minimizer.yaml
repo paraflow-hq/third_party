@@ -67,6 +67,7 @@ jobs:
             -p:PublishTrimmed=true \
             -o ./artifacts/${{ matrix.arch }}
 
+          ls shader-minifier/artifacts/${{ matrix.arch }}/
           cp shader-minifier/artifacts/${{ matrix.arch }}/ShaderMinifier shader-minifier-${{ matrix.arch }}
 
       - name: Upload artifacts
