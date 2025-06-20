@@ -1,0 +1,108 @@
+name: Download and Build Dawn
+
+env:
+  DAWN_VERSION: '615b5fd6606a4d2bed2dc13a95ea9f87b497dec4'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dawn.yaml'
+    tags:
+      - '*'
+
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/dawn.yaml'
+
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Dawn commit hash to build'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+            target_cpu: "x64"
+          - platform: linux/arm64  
+            arch: arm64
+            target_cpu: "arm64"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Dawn
+        run: |
+          git clone https://dawn.googlesource.com/dawn
+          cd dawn
+          git checkout ${{ inputs.commit || env.DAWN_VERSION }}
+          
+          # Apply patches for dependency fetching
+          git checkout -f
+          sed -i -e 's/required_submodules = \[$/required_submodules = \["third_party\/swiftshader",/g' tools/fetch_dawn_dependencies.py
+          sed -i -e 's/capture_output=True)/capture_output=True, check=True)/g' tools/fetch_dawn_dependencies.py
+          
+          # Download dependencies with shallow clone
+          python3 tools/fetch_dawn_dependencies.py -s
+          
+          # Revert patches
+          git checkout -f
+
+      - name: Build Dawn
+        run: |
+          cd dawn
+          mkdir -p out/Release
+          cd out/Release
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DDAWN_ENABLE_VULKAN=ON -DDAWN_ENABLE_SWIFTSHADER=ON -DDAWN_USE_GLFW=OFF -DDAWN_BUILD_SAMPLES=OFF -DDAWN_USE_X11=OFF -DTINT_BUILD_SPV_WRITER=ON ../..
+          ninja webgpu_dawn vk_swiftshader
+          cd ../..
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        id: upload-artifacts
+        with:
+          name: dawn-libraries-${{ matrix.arch }}-${{ github.run_number }}
+          path: |
+            dawn/out/Release/libvk_swiftshader.so
+            dawn/out/Release/libwebgpu_dawn.so
+          retention-days: 30
+          compression-level: 6
+
+      - name: Artifact info
+        run: |
+          echo "Architecture: ${{ matrix.arch }}"
+          echo "Artifact ID: ${{ steps.upload-artifacts.outputs.artifact-id }}"
+          echo "Artifact URL: ${{ steps.upload-artifacts.outputs.artifact-url }}"
+
+      - name: Create release archive
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Get commit hash from input parameter and take first 8 characters
+          COMMIT_HASH=$(echo "${{ inputs.commit || env.DAWN_VERSION }}" | head -c 8)
+          echo "Using commit hash: $COMMIT_HASH"
+
+          mkdir -p release-files
+          cp dawn/out/Release/libwebgpu_dawn.so release-files/ 2>/dev/null || true
+          cp dawn/out/Release/libvk_swiftshader.so release-files/ 2>/dev/null || true
+          cp dawn/out/Release/vk_swiftshader_icd.json release-files/ 2>/dev/null || true
+          cd release-files
+          zip -r ../libdawn-${{ matrix.arch }}-${COMMIT_HASH}.zip .
+          cd ..
+          ls -la libdawn-${{ matrix.arch }}-${COMMIT_HASH}.zip
+          echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
+
+      - name: Upload to release
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: libdawn-${{ matrix.arch }}-${{ env.COMMIT_HASH }}.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
