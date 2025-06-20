@@ -39,7 +39,7 @@ jobs:
           path: |
             angle
             out
-          key: angle-${{ matrix.arch }}-${{ hashFiles('commit') }}-${{ hashFiles('build.sh') }}
+          key: angle-${{ matrix.arch }}-${{ hashFiles('commit') }}
 
       - name: Download ANGLE
         if: steps.cache-angle.outputs.cache-hit != 'true'
