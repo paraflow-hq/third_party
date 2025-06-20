@@ -10,7 +10,7 @@ on:
 jobs:
   download:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -79,11 +79,10 @@ jobs:
 
       - name: Build ANGLE
         run: |
-          cd angle
-          chmod +x ../build.sh
+          chmod +x build.sh
           # Set target CPU architecture for the build
           export TARGET_CPU=${{ matrix.target_cpu }}
-          ../build.sh
+          build.sh
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
