@@ -8,8 +8,43 @@ on:
     branches: [main]
 
 jobs:
+  download:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Depot Tools
+        uses: newkdev/setup-depot-tools@v1.0.1
+
+      - name: Cache ANGLE source
+        uses: actions/cache@v4
+        id: cache-angle
+        with:
+          path: angle
+          key: angle-source-${{ hashFiles('commit') }}-${{ hashFiles('download.sh') }}
+          restore-keys: |
+            angle-source-${{ hashFiles('commit') }}-
+            angle-source-
+
+      - name: Download ANGLE
+        if: steps.cache-angle.outputs.cache-hit != 'true'
+        run: |
+          chmod +x download.sh
+          ./download.sh
+
+      - name: Upload ANGLE source as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: angle-source-${{ github.run_number }}
+          path: angle/
+          retention-days: 1
+          compression-level: 1
+
   build:
     runs-on: ${{ matrix.runner }}
+    needs: download
     strategy:
       matrix:
         include:
@@ -27,30 +62,22 @@ jobs:
       - name: Install Depot Tools
         uses: newkdev/setup-depot-tools@v1.0.1
 
-      - name: Cache ANGLE source
-        uses: actions/cache@v4
+      - name: Download ANGLE source artifact
+        uses: actions/download-artifact@v4
         with:
-          path: angle
-          key: angle-source-${{ matrix.arch }}-${{ hashFiles('download.sh') }}-${{ github.sha }}
-          restore-keys: |
-            angle-source-${{ matrix.arch }}-${{ hashFiles('download.sh') }}-
-            angle-source-${{ matrix.arch }}-
+          name: angle-source-${{ github.run_number }}
+          path: angle/
 
       - name: Cache build artifacts
         uses: actions/cache@v4
         with:
-          path: angle/out
-          key: angle-build-${{ matrix.arch }}-${{ hashFiles('build.sh') }}-${{ github.sha }}
+          path: out
+          key: angle-build-${{ matrix.arch }}-${{ hashFiles('commit') }}-${{ hashFiles('build.sh') }}
           restore-keys: |
-            angle-build-${{ matrix.arch }}-${{ hashFiles('build.sh') }}-
+            angle-build-${{ matrix.arch }}-${{ hashFiles('commit') }}-
             angle-build-${{ matrix.arch }}-
 
-      - name: Download ANGLE
-        run: |
-          chmod +x download.sh
-          ./download.sh
-
-      - name: Change to angle directory and build
+      - name: Build ANGLE
         run: |
           cd angle
           chmod +x ../build.sh
@@ -64,10 +91,10 @@ jobs:
         with:
           name: angle-libraries-${{ matrix.arch }}-${{ github.run_number }}
           path: |
-            angle/out/Release/libEGL.so*
-            angle/out/Release/libGLESv2.so*
-            angle/out/Release/libvulkan.so*
-            angle/out/Release/libvk_swiftshader.so*
+            out/Release/libEGL.so*
+            out/Release/libGLESv2.so*
+            out/Release/libvulkan.so*
+            out/Release/libvk_swiftshader.so*
           retention-days: 30
           compression-level: 6
 

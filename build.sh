@@ -8,7 +8,7 @@ cd angle
 TARGET_CPU=${TARGET_CPU:-"x64"}
 
 # config
-gn gen out/Release --args=" \
+gn gen ../out/Release --args=" \
   is_debug=false \
   target_cpu=\"$TARGET_CPU\" \
   angle_enable_vulkan=true \
@@ -26,7 +26,7 @@ git checkout -f
 sed -i -e 's/return angle::vk::ICD::Default;/return angle::vk::ICD::SwiftShader;/g' src/libANGLE/renderer/vulkan/DisplayVk.cpp
 
 # build
-ninja -C out/Release libEGL libGLESv2 libvulkan swiftshader_libvulkan
+ninja -C ../out/Release libEGL libGLESv2 libvulkan swiftshader_libvulkan
 
 # cancel patch
 git checkout -f
