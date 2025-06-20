@@ -70,9 +70,6 @@ jobs:
         with:
           path: out
           key: angle-build-${{ matrix.arch }}-${{ hashFiles('commit') }}-${{ hashFiles('build.sh') }}
-          restore-keys: |
-            angle-build-${{ matrix.arch }}-${{ hashFiles('commit') }}-
-            angle-build-${{ matrix.arch }}-
 
       - name: Build ANGLE
         run: |
