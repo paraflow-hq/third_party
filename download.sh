@@ -10,4 +10,6 @@ else
     cd angle
 fi
 
+git checkout $(cat commit)
+
 gclient sync

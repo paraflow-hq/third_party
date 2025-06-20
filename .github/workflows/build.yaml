@@ -24,9 +24,6 @@ jobs:
         with:
           path: angle
           key: angle-source-${{ hashFiles('commit') }}-${{ hashFiles('download.sh') }}
-          restore-keys: |
-            angle-source-${{ hashFiles('commit') }}-
-            angle-source-
 
       - name: Download ANGLE
         if: steps.cache-angle.outputs.cache-hit != 'true'
@@ -37,7 +34,7 @@ jobs:
       - name: Upload ANGLE source as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: angle-source-${{ github.run_number }}
+          name: angle-source
           path: angle/
           retention-days: 1
           compression-level: 1
@@ -65,7 +62,7 @@ jobs:
       - name: Download ANGLE source artifact
         uses: actions/download-artifact@v4
         with:
-          name: angle-source-${{ github.run_number }}
+          name: angle-source
           path: angle/
 
       - name: Cache build artifacts
@@ -82,7 +79,7 @@ jobs:
           chmod +x build.sh
           # Set target CPU architecture for the build
           export TARGET_CPU=${{ matrix.target_cpu }}
-          build.sh
+          ./build.sh
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
