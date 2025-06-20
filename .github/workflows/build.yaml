@@ -23,13 +23,16 @@ jobs:
         id: cache-angle
         with:
           path: angle
-          key: angle-source-${{ hashFiles('commit') }}-${{ hashFiles('download.sh') }}
+          key: angle-source-${{ hashFiles('commit') }}
 
       - name: Download ANGLE
         if: steps.cache-angle.outputs.cache-hit != 'true'
         run: |
-          chmod +x download.sh
-          ./download.sh
+          mkdir angle
+          cd angle
+          fetch angle
+          git checkout $(cat ../commit)
+          gclient sync
 
       - name: Upload ANGLE source as artifact
         uses: actions/upload-artifact@v4
@@ -78,10 +81,27 @@ jobs:
 
       - name: Build ANGLE
         run: |
-          chmod +x build.sh
-          # Set target CPU architecture for the build
-          export TARGET_CPU=${{ matrix.target_cpu }}
-          ./build.sh
+          cd angle
+
+          # config
+          gn gen ../out/Release --args=" \
+            is_debug=false \
+            target_cpu=\"${{ matrix.target_cpu }}\" \
+            angle_enable_vulkan=true \
+            angle_enable_swiftshader=true \
+            angle_enable_gl=false \
+            angle_enable_gl_desktop_backend=false \
+            angle_enable_wgpu=false \
+            angle_enable_null=false \
+            angle_use_x11=false \
+            angle_has_histograms=false \
+            angle_build_tests=false"
+
+          # use SwiftShader default
+          sed -i -e 's/return angle::vk::ICD::Default;/return angle::vk::ICD::SwiftShader;/g' src/libANGLE/renderer/vulkan/DisplayVk.cpp
+
+          # build
+          ninja -C ../out/Release libEGL libGLESv2 libvulkan swiftshader_libvulkan
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
