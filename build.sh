@@ -4,9 +4,13 @@ set -eu
 
 cd angle
 
+# Set target CPU architecture (default to x64 if not specified)
+TARGET_CPU=${TARGET_CPU:-"x64"}
+
 # config
 gn gen out/Release --args=" \
   is_debug=false \
+  target_cpu=\"$TARGET_CPU\" \
   angle_enable_vulkan=true \
   angle_enable_swiftshader=true \
   angle_enable_gl=false \
