@@ -72,8 +72,7 @@ jobs:
         with:
           name: dawn-libraries-${{ matrix.arch }}-${{ github.run_number }}
           path: |
-            dawn/out/Release/libvk_swiftshader.so
-            dawn/out/Release/libwebgpu_dawn.so
+            dawn/out/Release
           retention-days: 30
           compression-level: 6
 
@@ -90,9 +89,7 @@ jobs:
           COMMIT_HASH=$(echo "${{ inputs.commit || env.DAWN_VERSION }}" | head -c 8)
           echo "Using commit hash: $COMMIT_HASH"
 
-          mkdir -p release-files
-          cp dawn/out/Release/libwebgpu_dawn.so release-files/ 2>/dev/null || true
-          cp dawn/out/Release/libvk_swiftshader.so release-files/ 2>/dev/null || true
+          cp -a dawn/out/Release release-files
           cd release-files
           zip -r ../libdawn-${{ matrix.arch }}-${COMMIT_HASH}.zip .
           cd ..
@@ -105,10 +102,3 @@ jobs:
         with:
           files: libdawn-${{ matrix.arch }}-${{ env.COMMIT_HASH }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: List build output
-        run: |
-          echo "Listing dawn/out/Release directory:"
-          ls -la dawn/out/Release/
-          echo "Looking for library files:"
-          find dawn/out/Release -name "*.so*" -o -name "*.dylib*" -o -name "*.dll*"

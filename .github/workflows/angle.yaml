@@ -1,25 +1,25 @@
 name: Angle
 
 env:
-  ANGLE_VERSION: 'a6ee4641d07e3f65cf54aa01c4707151db7a506b'
+  ANGLE_VERSION: "a6ee4641d07e3f65cf54aa01c4707151db7a506b"
 
 on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/angle.yaml'
+      - ".github/workflows/angle.yaml"
     tags:
-      - '*'
+      - "*"
 
   pull_request:
     branches: [main]
     paths:
-      - '.github/workflows/angle.yaml'
+      - ".github/workflows/angle.yaml"
 
   workflow_dispatch:
     inputs:
       commit:
-        description: 'ANGLE commit hash to build'
+        description: "ANGLE commit hash to build"
         required: true
         type: string
 
@@ -32,7 +32,7 @@ jobs:
           - platform: linux/amd64
             arch: amd64
             target_cpu: "x64"
-          - platform: linux/arm64  
+          - platform: linux/arm64
             arch: arm64
             target_cpu: "arm64"
 
@@ -80,11 +80,7 @@ jobs:
         with:
           name: angle-libraries-${{ matrix.arch }}-${{ github.run_number }}
           path: |
-            out/Release/libEGL.so
-            out/Release/libGLESv2.so
-            out/Release/libvk_swiftshader.so
-            out/Release/libvulkan.so.1
-            out/Release/vk_swiftshader_icd.json
+            out/Release
           retention-days: 30
           compression-level: 6
 
@@ -101,12 +97,7 @@ jobs:
           COMMIT_HASH=$(echo "${{ inputs.commit || env.ANGLE_VERSION }}" | head -c 8)
           echo "Using commit hash: $COMMIT_HASH"
 
-          mkdir -p release-files
-          cp out/Release/libEGL.so release-files/ 2>/dev/null || true
-          cp out/Release/libGLESv2.so release-files/ 2>/dev/null || true
-          cp out/Release/libvk_swiftshader.so release-files/ 2>/dev/null || true
-          cp out/Release/libvulkan.so.1 release-files/ 2>/dev/null || true
-          cp out/Release/vk_swiftshader_icd.json release-files/ 2>/dev/null || true
+          cp -a out/Release release-files
           cd release-files
           zip -r ../libangle-${{ matrix.arch }}-${COMMIT_HASH}.zip .
           cd ..
