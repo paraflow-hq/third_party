@@ -19,7 +19,7 @@ jobs:
         uses: newkdev/setup-depot-tools@v1.0.1
 
       - name: Cache ANGLE source
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: angle
           key: angle-source-${{ hashFiles('download.sh') }}-${{ github.sha }}
@@ -28,7 +28,7 @@ jobs:
             angle-source-
 
       - name: Cache build artifacts
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: angle/out
           key: angle-build-${{ hashFiles('build.sh') }}-${{ github.sha }}
@@ -48,12 +48,19 @@ jobs:
           ../build.sh
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
+        id: upload-artifacts
         with:
-          name: angle-libraries
+          name: angle-libraries-${{ github.run_number }}
           path: |
             angle/out/Release/libEGL.so*
             angle/out/Release/libGLESv2.so*
             angle/out/Release/libvulkan.so*
             angle/out/Release/libvk_swiftshader.so*
           retention-days: 30
+          compression-level: 6
+          
+      - name: Output artifact info
+        run: |
+          echo "Artifact ID: ${{ steps.upload-artifacts.outputs.artifact-id }}"
+          echo "Artifact URL: ${{ steps.upload-artifacts.outputs.artifact-url }}"
