@@ -48,7 +48,6 @@ jobs:
           # config
           gn gen ../out/Release --args=" \
             is_debug=false \
-            target_cpu=\"${{ matrix.target_cpu }}\" \
             angle_enable_vulkan=true \
             angle_enable_swiftshader=true \
             angle_enable_gl=false \
