@@ -1,0 +1,59 @@
+name: Download and Build ANGLE
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Depot Tools
+        uses: newkdev/setup-depot-tools@v1.0.1
+
+      - name: Cache ANGLE source
+        uses: actions/cache@v3
+        with:
+          path: angle
+          key: angle-source-${{ hashFiles('download.sh') }}-${{ github.sha }}
+          restore-keys: |
+            angle-source-${{ hashFiles('download.sh') }}-
+            angle-source-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v3
+        with:
+          path: angle/out
+          key: angle-build-${{ hashFiles('build.sh') }}-${{ github.sha }}
+          restore-keys: |
+            angle-build-${{ hashFiles('build.sh') }}-
+            angle-build-
+
+      - name: Download ANGLE
+        run: |
+          chmod +x download.sh
+          ./download.sh
+
+      - name: Change to angle directory and build
+        run: |
+          cd angle
+          chmod +x ../build.sh
+          ../build.sh
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: angle-libraries
+          path: |
+            angle/out/Release/libEGL.so*
+            angle/out/Release/libGLESv2.so*
+            angle/out/Release/libvulkan.so*
+            angle/out/Release/libvk_swiftshader.so*
+          retention-days: 30
