@@ -1,0 +1,101 @@
+name: Shader Minimizer
+
+env:
+  SHADER_MINIMIZER_VERSION: '1.5.1'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/shader-minimizer.yaml'
+    tags:
+      - '*'
+
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/shader-minimizer.yaml'
+
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Shader Minimizer commit hash or tag to build'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: linux-x64
+          - arch: linux-arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Shader Minimizer
+        run: |
+          git clone https://github.com/laurentlb/shader-minifier.git
+          cd shader-minifier
+          git checkout ${{ inputs.commit || env.SHADER_MINIMIZER_VERSION }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: |
+          cd shader-minifier
+          dotnet restore
+
+      - name: Build ShaderMinifier
+        run: |
+          cd shader-minifier
+          dotnet publish ShaderMinifier/ShaderMinifier.fsproj \
+            -c Release \
+            -r ${{ matrix.arch }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:PublishTrimmed=true \
+            -o ./artifacts/${{ matrix.arch }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        id: upload-artifacts
+        with:
+          name: shader-minimizer-${{ matrix.arch }}-${{ github.run_number }}
+          path: shader-minifier/artifacts/${{ matrix.arch }}/ShaderMinifier*
+          retention-days: 30
+          compression-level: 6
+
+      - name: Artifact info
+        run: |
+          echo "Architecture: ${{ matrix.arch }}"
+          echo "Artifact ID: ${{ steps.upload-artifacts.outputs.artifact-id }}"
+          echo "Artifact URL: ${{ steps.upload-artifacts.outputs.artifact-url }}"
+
+      - name: Create release archive
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Get commit hash from input parameter and take first 8 characters
+          COMMIT_HASH=$(echo "${{ inputs.commit || env.SHADER_MINIMIZER_VERSION }}" | head -c 8)
+          echo "Using commit hash: $COMMIT_HASH"
+
+          mkdir -p release-files
+          cp shader-minifier/artifacts/${{ matrix.arch }}/ShaderMinifier* release-files/ 2>/dev/null || true
+          cd release-files
+          tar -czf ../shader-minimizer-${{ matrix.arch }}-${COMMIT_HASH}.tar.gz *
+          cd ..
+          ls -la shader-minimizer-${{ matrix.arch }}-${COMMIT_HASH}.tar.gz
+          echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
+
+      - name: Upload to release
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: shader-minimizer-${{ matrix.arch }}-${{ env.COMMIT_HASH }}.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
