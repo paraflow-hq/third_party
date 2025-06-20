@@ -12,9 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        include:
+          - platform: linux/amd64
+            arch: amd64
+            target_cpu: "x64"
+          - platform: linux/arm64  
+            arch: arm64
+            target_cpu: "arm64"
 
     steps:
       - name: Checkout repository
@@ -30,7 +34,7 @@ jobs:
           path: |
             angle
             out
-          key: angle-${{ matrix.platform }}-${{ hashFiles('commit') }}-${{ hashFiles('build.sh') }}
+          key: angle-${{ matrix.arch }}-${{ hashFiles('commit') }}-${{ hashFiles('build.sh') }}
 
       - name: Download ANGLE
         if: steps.cache-angle.outputs.cache-hit != 'true'
@@ -68,7 +72,7 @@ jobs:
         uses: actions/upload-artifact@v4
         id: upload-artifacts
         with:
-          name: angle-libraries-${{ matrix.platform }}-${{ github.run_number }}
+          name: angle-libraries-${{ matrix.arch }}-${{ github.run_number }}
           path: |
             out/Release/libEGL.so*
             out/Release/libGLESv2.so*
@@ -79,7 +83,7 @@ jobs:
 
       - name: Output artifact info
         run: |
-          echo "Architecture: ${{ matrix.platform }}"
+          echo "Architecture: ${{ matrix.arch }}"
           echo "Artifact ID: ${{ steps.upload-artifacts.outputs.artifact-id }}"
           echo "Artifact URL: ${{ steps.upload-artifacts.outputs.artifact-url }}"
 
