@@ -49,7 +49,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "8.0.407"
 
       - name: Restore dependencies
         run: |
@@ -62,10 +62,8 @@ jobs:
 
           dotnet publish ShaderMinifier/ShaderMinifier.fsproj \
             -c Release \
-            -r ${{ matrix.arch }} \
             --self-contained true \
             -p:PublishSingleFile=true \
-            -p:PublishTrimmed=true \
             -o ./artifacts/${{ matrix.arch }}
 
           cp artifacts/${{ matrix.arch }}/ShaderMinifier ../shader-minifier-${{ matrix.arch }}
