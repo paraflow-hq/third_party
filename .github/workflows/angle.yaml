@@ -1,4 +1,7 @@
-name: Download and Build ANGLE
+name: ANGLE
+
+env:
+  ANGLE_VERSION: 'a6ee4641d07e3f65cf54aa01c4707151db7a506b'
 
 on:
   push:
@@ -9,8 +12,12 @@ on:
   pull_request:
     branches: [main]
 
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'ANGLE commit hash to build'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -32,15 +39,15 @@ jobs:
       - name: Install Depot Tools
         uses: newkdev/setup-depot-tools@v1.0.1
 
-      - name: Download ANGLE
+      - name: Download
         run: |
           mkdir -pv angle
           cd angle
           fetch angle
-          git checkout $(cat ../commit)
+          git checkout ${{ inputs.commit || env.ANGLE_VERSION }}
           gclient sync
 
-      - name: Build ANGLE
+      - name: Build
         run: |
           cd angle
 
@@ -63,7 +70,7 @@ jobs:
           # build
           ninja -C ../out/Release libEGL libGLESv2 libvulkan swiftshader_libvulkan
 
-      - name: Upload build artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         id: upload-artifacts
         with:
@@ -77,19 +84,19 @@ jobs:
           retention-days: 30
           compression-level: 6
 
-      - name: Output artifact info
+      - name: Artifact info
         run: |
           echo "Architecture: ${{ matrix.arch }}"
           echo "Artifact ID: ${{ steps.upload-artifacts.outputs.artifact-id }}"
           echo "Artifact URL: ${{ steps.upload-artifacts.outputs.artifact-url }}"
 
       - name: Create release archive
-        if: github.event_name == 'release'
+        if: github.event_name == 'workflow_dispatch'
         run: |
-          # Read commit hash and get first 8 characters
-          COMMIT_HASH=$(cat commit | head -c 8)
+          # Get commit hash from input parameter and take first 8 characters
+          COMMIT_HASH=$(echo "${{ inputs.commit || env.ANGLE_VERSION }}" | head -c 8)
           echo "Using commit hash: $COMMIT_HASH"
-          
+
           mkdir -p release-files
           cp out/Release/libEGL.so release-files/ 2>/dev/null || true
           cp out/Release/libGLESv2.so release-files/ 2>/dev/null || true
@@ -103,7 +110,7 @@ jobs:
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
 
       - name: Upload to release
-        if: github.event_name == 'release'
+        if: github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v1
         with:
           files: libangle-${{ matrix.arch }}-${{ env.COMMIT_HASH }}.zip
