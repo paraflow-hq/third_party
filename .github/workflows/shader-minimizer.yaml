@@ -59,6 +59,7 @@ jobs:
       - name: Build ShaderMinifier
         run: |
           cd shader-minifier
+
           dotnet publish ShaderMinifier/ShaderMinifier.fsproj \
             -c Release \
             -r ${{ matrix.arch }} \
@@ -67,8 +68,7 @@ jobs:
             -p:PublishTrimmed=true \
             -o ./artifacts/${{ matrix.arch }}
 
-          ls shader-minifier/artifacts/${{ matrix.arch }}/
-          cp shader-minifier/artifacts/${{ matrix.arch }}/ShaderMinifier shader-minifier-${{ matrix.arch }}
+          cp artifacts/${{ matrix.arch }}/ShaderMinifier ../shader-minifier-${{ matrix.arch }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
