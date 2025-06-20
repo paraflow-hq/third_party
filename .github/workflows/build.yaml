@@ -39,6 +39,11 @@ jobs:
           retention-days: 1
           compression-level: 1
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+
   build:
     runs-on: ${{ matrix.runner }}
     needs: download
