@@ -32,17 +32,7 @@ jobs:
       - name: Install Depot Tools
         uses: newkdev/setup-depot-tools@v1.0.1
 
-      - name: Cache ANGLE source and build artifacts
-        uses: actions/cache@v4
-        id: cache-angle
-        with:
-          path: |
-            angle
-            out
-          key: angle-${{ matrix.arch }}-${{ hashFiles('commit') }}
-
       - name: Download ANGLE
-        if: steps.cache-angle.outputs.cache-hit != 'true'
         run: |
           mkdir -pv angle
           cd angle
@@ -118,6 +108,3 @@ jobs:
         with:
           files: libangle-${{ matrix.arch }}-${{ env.COMMIT_HASH }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
