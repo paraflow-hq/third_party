@@ -90,8 +90,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "manual-shader-minimizer-${{ inputs.commit || env.SHADER_MINIMIZER_VERSION }}"
-          name: "Shader Minimizer Manual Build ${{ inputs.commit || env.SHADER_MINIMIZER_VERSION }}"
+          tag_name: "shader-minimizer-${{ inputs.commit || env.SHADER_MINIMIZER_VERSION }}"
+          name: "Shader Minimizer Build ${{ inputs.commit || env.SHADER_MINIMIZER_VERSION }}"
           files: shader-minifier-${{ matrix.arch }}
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: false

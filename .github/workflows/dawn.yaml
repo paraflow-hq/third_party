@@ -33,11 +33,11 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            arch: amd64
+            arch: linux-x64
             target_cpu: "x64"
             os: ubuntu-latest
           - platform: linux/arm64
-            arch: arm64
+            arch: linux-arm64
             target_cpu: "arm64"
             os: ubuntu-24.04-arm
           - platform: darwin/arm64
@@ -109,8 +109,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "manual-dawn-${{ env.COMMIT_HASH }}"
-          name: "Dawn Manual Build ${{ env.COMMIT_HASH }}"
+          tag_name: "dawn-${{ env.COMMIT_HASH }}"
+          name: "Dawn Build ${{ env.COMMIT_HASH }}"
           files: libdawn-${{ matrix.arch }}-${{ env.COMMIT_HASH }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
