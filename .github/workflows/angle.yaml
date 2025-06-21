@@ -64,9 +64,15 @@ jobs:
         run: |
           cd angle
 
+          # Install required sysroots for cross-compilation
+          if [[ "${{ matrix.platform }}" == "linux/arm64" ]]; then
+            build/linux/sysroot_scripts/install-sysroot.py --arch=arm64
+          fi
+
           # config
           gn gen ../out/Release --args=" \
             is_debug=false \
+            target_cpu=\"${{ matrix.target_cpu }}\" \
             angle_enable_vulkan=true \
             angle_enable_swiftshader=true \
             angle_enable_gl=false \
