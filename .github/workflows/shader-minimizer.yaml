@@ -1,5 +1,8 @@
 name: Shader Minimizer
 
+permissions:
+  contents: write
+
 env:
   SHADER_MINIMIZER_VERSION: "1.5.1"
 

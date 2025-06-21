@@ -1,5 +1,8 @@
 name: Angle
 
+permissions:
+  contents: write
+
 env:
   ANGLE_VERSION: "a6ee4641d07e3f65cf54aa01c4707151db7a506b"
 
