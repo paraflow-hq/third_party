@@ -35,15 +35,15 @@ jobs:
           - platform: linux/amd64
             arch: linux-x64
             target_cpu: "x64"
-            os: ubuntu-latest
+            os: ubuntu-24.04
           - platform: linux/arm64
             arch: linux-arm64
             target_cpu: "arm64"
-            os: ubuntu-latest
+            os: ubuntu-24.04
           - platform: darwin/arm64
             arch: osx-arm64
             target_cpu: "arm64"
-            os: macos-latest
+            os: macos-15
 
     steps:
       - name: Checkout repository
