@@ -35,11 +35,11 @@ jobs:
           - platform: linux/amd64
             arch: linux-x64
             target_cpu: "x64"
-            os: ubuntu-24.04
+            os: ubuntu-22.04
           - platform: linux/arm64
             arch: linux-arm64
             target_cpu: "arm64"
-            os: ubuntu-24.04
+            os: ubuntu-22.04
           - platform: darwin/arm64
             arch: osx-arm64
             target_cpu: "arm64"
