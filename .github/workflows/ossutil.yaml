@@ -45,10 +45,6 @@ jobs:
             os: macos-15
             goos: darwin
             goarch: arm64
-          - arch: windows-x64
-            os: windows-latest
-            goos: windows
-            goarch: amd64
 
     steps:
       - name: Checkout repository
