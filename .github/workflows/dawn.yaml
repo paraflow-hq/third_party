@@ -98,7 +98,22 @@ jobs:
           COMMIT_HASH=$(echo "${{ inputs.commit || env.DAWN_VERSION }}" | head -c 8)
           echo "Using commit hash: $COMMIT_HASH"
 
-          cp -a dawn/out/Release release-files
+          # copy release files
+          rm -rf release-files
+          mkdir -p release-files/include/webgpu
+          cp -a dawn/out/Release/gen/include/dawn/webgpu.h release-files/include/webgpu/
+          cp -a dawn/out/Release/gen/include/dawn/webgpu_cpp.h release-files/include/webgpu/
+          cp -a dawn/out/Release/gen/include/webgpu/webgpu_cpp_chained_struct.h release-files/include/webgpu/
+          cp -a dawn/include/webgpu/webgpu_enum_class_bitmasks.h release-files/include/webgpu/
+          mkdir -p release-files/lib
+          if [[ "${{ matrix.platform }}" == "darwin/arm64" ]]; then
+            cp -a dawn/out/Release/libvk_swiftshader.dylib release-files/lib/
+            cp -a dawn/out/Release/src/dawn/native/libwebgpu_dawn.dylib release-files/lib/
+          else
+            cp -a dawn/out/Release/libvk_swiftshader.so release-files/lib/
+            cp -a dawn/out/Release/src/dawn/native/libwebgpu_dawn.so release-files/lib/
+          fi
+
           cd release-files
           zip -r ../libdawn-${{ matrix.arch }}-${COMMIT_HASH}.zip .
           cd ..
