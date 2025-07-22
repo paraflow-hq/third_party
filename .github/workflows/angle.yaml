@@ -92,33 +92,13 @@ jobs:
 
           # build
           ninja -C ../out/Release libEGL libGLESv2 libvulkan swiftshader_libvulkan
-
-          # copy release files
-          rm -rf ../release_files
-          mkdir -p ../release_files/include
-          cp -a include/EGL ../release_files/include/
-          cp -a include/GLES2 ../release_files/include/
-          cp -a include/GLES3 ../release_files/include/
-          cp -a include/KHR ../release_files/include/
-          mkdir -p ../release_files/lib
-          if [[ "${{ matrix.platform }}" == "darwin/arm64" ]]; then
-            cp -a ../out/Release/libEGL.dylib ../release_files/lib/
-            cp -a ../out/Release/libGLESv2.dylib ../release_files/lib/
-            cp -a ../out/Release/libvk_swiftshader.dylib ../release_files/lib/
-          else
-            cp -a ../out/Release/libEGL.so ../release_files/lib/
-            cp -a ../out/Release/libGLESv2.so ../release_files/lib/
-            cp -a ../out/Release/libvk_swiftshader.so ../release_files/lib/
-            cp -a ../out/Release/libvulkan.so.1 ../release_files/lib/
-            cp -a ../out/Release/vk_swiftshader_icd.json ../release_files/lib/
-          fi
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         id: upload-artifacts
         with:
           name: angle-libraries-${{ matrix.arch }}-${{ github.run_number }}
           path: |
-            release_files
+            out/Release
           retention-days: 30
           compression-level: 6
 
@@ -135,7 +115,26 @@ jobs:
           COMMIT_HASH=$(echo "${{ inputs.commit || env.ANGLE_VERSION }}" | head -c 8)
           echo "Using commit hash: $COMMIT_HASH"
 
-          cp -a release_files release-files
+          # copy release files
+          rm -rf release-files
+          mkdir -p release-files/include
+          cp -a angle/include/EGL release-files/include/
+          cp -a angle/include/GLES2 release-files/include/
+          cp -a angle/include/GLES3 release-files/include/
+          cp -a angle/include/KHR release-files/include/
+          mkdir -p release-files/lib
+          if [[ "${{ matrix.platform }}" == "darwin/arm64" ]]; then
+            cp -a out/Release/libEGL.dylib release-files/lib/
+            cp -a out/Release/libGLESv2.dylib release-files/lib/
+            cp -a out/Release/libvk_swiftshader.dylib release-files/lib/
+          else
+            cp -a out/Release/libEGL.so release-files/lib/
+            cp -a out/Release/libGLESv2.so release-files/lib/
+            cp -a out/Release/libvk_swiftshader.so release-files/lib/
+            cp -a out/Release/libvulkan.so.1 release-files/lib/
+            cp -a out/Release/vk_swiftshader_icd.json release-files/lib/
+          fi
+
           cd release-files
           zip -r ../libangle-${{ matrix.arch }}-${COMMIT_HASH}.zip .
           cd ..
