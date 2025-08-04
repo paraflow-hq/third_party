@@ -49,24 +49,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Dawn
+      - name: Install Depot Tools
+        uses: newkdev/setup-depot-tools@v1.0.1
+
+      - name: Free Disk Space (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+
+      - name: Download
         run: |
           git clone https://dawn.googlesource.com/dawn
           cd dawn
           git checkout ${{ inputs.commit || env.DAWN_VERSION }}
+          cp scripts/standalone.gclient .gclient
+          gclient sync
 
-          # Apply patches for dependency fetching
-          git checkout -f
-          sed -i -e 's/required_submodules = \[$/required_submodules = \["third_party\/swiftshader",/g' tools/fetch_dawn_dependencies.py
-          sed -i -e 's/capture_output=True)/capture_output=True, check=True)/g' tools/fetch_dawn_dependencies.py
-
-          # Download dependencies with shallow clone
-          python3 tools/fetch_dawn_dependencies.py -s
-
-          # Revert patches
-          git checkout -f
-
-      - name: Build Dawn
+      - name: Build
         run: |
           cd dawn
           mkdir -p out/Release
